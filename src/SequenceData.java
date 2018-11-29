@@ -6,8 +6,12 @@ public class SequenceData {
     public static SequenceData instance;
 
     private HashMap<String, List<ServerDetails>> servers = new HashMap<>();
-    private HashMap<Integer, PacketData> requests = new HashMap<>();
-    private int sequenceNumber = 0;
+    private HashMap<Integer, PacketData> compRequestTrack = new HashMap<>();
+    private HashMap<Integer, PacketData> soenRequestTrack = new HashMap<>();
+    private HashMap<Integer, PacketData> inseRequestTrack = new HashMap<>();
+    private int compSequenceNumber = 0;
+    private int soenSequenceNumber = 0;
+    private int inseSequenceNumber = 0;
 
     private SequenceData() { }
 
@@ -17,6 +21,24 @@ public class SequenceData {
         compServers.add(new ServerDetails("192.168.1.1", 8002));
         compServers.add(new ServerDetails("192.168.1.1", 8002));
         servers.put("comp", compServers);
+    }
+
+    public void clearHashMaps() {
+        this.compRequestTrack.clear();
+        this.soenRequestTrack.clear();
+        this.inseRequestTrack.clear();
+    }
+
+    public HashMap<Integer, PacketData> getCompRequestTrack() {
+        return compRequestTrack;
+    }
+
+    public HashMap<Integer, PacketData> getSoenRequestTrack() {
+        return soenRequestTrack;
+    }
+
+    public HashMap<Integer, PacketData> getInseRequestTrack() {
+        return inseRequestTrack;
     }
 
     public List<ServerDetails> getServer(String server) {
@@ -29,26 +51,94 @@ public class SequenceData {
         return instance;
     }
 
-    synchronized public void incrementSequenceNumber() {
-        this.sequenceNumber++;
+    public int getSequenceNumber(String server) {
+        switch (server.toUpperCase()) {
+            case "COMP":
+                return compSequenceNumber;
+            case "SOEN":
+                return soenSequenceNumber;
+            case "INSE":
+                return inseSequenceNumber;
+        }
+
+        return 0;
     }
 
-    public int getSequenceNumber() {
-        return sequenceNumber;
+    synchronized public void incrementSequenceNumber(String server) {
+        switch (server.toUpperCase()) {
+            case "COMP":
+                this.compSequenceNumber++;
+                break;
+            case "SOEN":
+                this.soenSequenceNumber++;
+                break;
+            case "INSE":
+                this.inseSequenceNumber++;
+                break;
+        }
     }
 
     public void addRequestToQueue(int sequence, String request, String server) {
-        this.requests.put(sequence, new PacketData(request, getServer(server)));
+        switch (server.toUpperCase()) {
+            case "COMP":
+                this.compRequestTrack.put(sequence, new PacketData(request, getServer(server)));
+                break;
+            case "SOEN":
+                this.soenRequestTrack.put(sequence, new PacketData(request, getServer(server)));
+                break;
+            case "INSE":
+                this.inseRequestTrack.put(sequence, new PacketData(request, getServer(server)));
+                break;
+        }
     }
 
-    public void removeFromQueue(int sequence, String ip) {
-        if (requests.containsKey(sequence)) {
-            PacketData data = requests.get(sequence);
+    public void removeFromQueue(int sequence, String ip, String server) {
+        switch (server.toUpperCase()) {
+            case "COMP":
+                removeFromCompQueue(sequence, ip);
+                break;
+            case "SOEN":
+                removeFromSoenQueue(sequence, ip);
+                break;
+            case "INSE":
+                removeFromInseQueue(sequence, ip);
+                break;
+        }
+    }
+
+    @SuppressWarnings("Duplicates")
+    public void removeFromCompQueue(int sequence, String ip) {
+        if (compRequestTrack.containsKey(sequence)) {
+            PacketData data = compRequestTrack.get(sequence);
             data.servers = removeBasedOnIp(data.servers, ip);
             if (data.servers.size() == 0)
-                requests.remove(sequence);
+                compRequestTrack.remove(sequence);
             else
-                requests.put(sequence, data);
+                compRequestTrack.put(sequence, data);
+        }
+    }
+
+    @SuppressWarnings("Duplicates")
+    public void removeFromSoenQueue(int sequence, String ip) {
+        if (soenRequestTrack.containsKey(sequence)) {
+            PacketData data = soenRequestTrack.get(sequence);
+            data.servers = removeBasedOnIp(data.servers, ip);
+            if (data.servers.size() == 0)
+                soenRequestTrack.remove(sequence);
+            else
+                soenRequestTrack.put(sequence, data);
+        }
+    }
+
+    @SuppressWarnings("Duplicates")
+    public void removeFromInseQueue(int sequence, String ip) {
+        if (inseRequestTrack.containsKey(sequence)) {
+            PacketData data = inseRequestTrack.get(sequence);
+            data.servers = removeBasedOnIp(data.servers, ip);
+            if (data.servers.size() == 0)
+                inseRequestTrack.remove(sequence);
+            else
+                inseRequestTrack.put(sequence, data);
         }
     }
 

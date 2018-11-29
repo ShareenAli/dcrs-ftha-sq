@@ -21,10 +21,14 @@ public class RepToSeqThread implements Runnable {
                 DatagramPacket packet = new DatagramPacket(incoming, incoming.length);
                 socket.receive(packet);
 
-                int sequence = (int) deserialize(packet.getData());
+                String content = (String) deserialize(packet.getData());
+                String contents[] = content.split("-");
+
+                int sequence = Integer.parseInt(contents[0]);
+                String server = contents[1];
 
                 SequenceData data = SequenceData.getInstance();
-                data.removeFromQueue(sequence, packet.getAddress().getHostAddress());
+                data.removeFromQueue(sequence, packet.getAddress().getHostAddress(), server);
             }
         } catch (Exception e) {
             e.printStackTrace();

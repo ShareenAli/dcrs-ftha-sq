@@ -25,18 +25,19 @@ public class SequencerThread implements Runnable {
             String server = contents[contents.length - 1];
 
             SequenceData data = SequenceData.getInstance();
-            data.incrementSequenceNumber();
 
-            int sequenceNumber = data.getSequenceNumber();
-            String result = String.valueOf(sequenceNumber).concat("-" + content);
+            data.incrementSequenceNumber(server);
+
+            int sequenceNumber = data.getSequenceNumber(server);
+            content = String.valueOf(sequenceNumber).concat("-" + content);
 
             data.addRequestToQueue(sequenceNumber, content, server);
 
-            System.out.println(result);
+            System.out.println(content);
 
             List<ServerDetails> serverDetails = data.getServer(server);
 
-            byte[] contentMessage = serialize(result);
+            byte[] contentMessage = serialize(content);
 
             for (ServerDetails details : serverDetails) {
                 DatagramSocket socket = new DatagramSocket();
