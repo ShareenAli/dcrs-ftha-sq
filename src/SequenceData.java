@@ -17,10 +17,28 @@ public class SequenceData {
 
     public void initializeServers() {
         List<ServerDetails> compServers = new ArrayList<>();
-        compServers.add(new ServerDetails("192.168.1.1", 8002));
-        compServers.add(new ServerDetails("192.168.1.1", 8002));
-        compServers.add(new ServerDetails("192.168.1.1", 8002));
+        compServers.add(new ServerDetails("230.1.1.1", 8004));
+        compServers.add(new ServerDetails("230.1.1.2", 8004));
+        compServers.add(new ServerDetails("230.1.1.3", 8004));
         servers.put("comp", compServers);
+
+        List<ServerDetails> soenServers = new ArrayList<>();
+        soenServers.add(new ServerDetails("230.1.1.1", 8005));
+        soenServers.add(new ServerDetails("230.1.1.2", 8005));
+        soenServers.add(new ServerDetails("230.1.1.3", 8005));
+        servers.put("soen", soenServers);
+
+        List<ServerDetails> inseServers = new ArrayList<>();
+        inseServers.add(new ServerDetails("230.1.1.1", 8006));
+        inseServers.add(new ServerDetails("230.1.1.2", 8006));
+        inseServers.add(new ServerDetails("230.1.1.3", 8006));
+        servers.put("inse", inseServers);
+
+        List<ServerDetails> replicaManagers = new ArrayList<>();
+        replicaManagers.add(new ServerDetails("230.1.1.1", 8007));
+        replicaManagers.add(new ServerDetails("230.1.1.2", 8007));
+        replicaManagers.add(new ServerDetails("230.1.1.3", 8007));
+        servers.put("replicaManagers", replicaManagers);
     }
 
     public void clearHashMaps() {

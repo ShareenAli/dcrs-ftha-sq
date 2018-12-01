@@ -6,19 +6,28 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 public class Sequencer {
     public static void main(String[] args) {
+        Logger logs = Logger.getLogger("sequencer");
+
+        try {
+            FileHandler handler = new FileHandler("sequencer.log", true);
+            logs.addHandler(handler);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+
         SequenceData sequenceData = SequenceData.getInstance();
         sequenceData.initializeServers();
-
-        RepToSeqThread repToSeqThread = new RepToSeqThread();
+        RepToSeqThread repToSeqThread = new RepToSeqThread(logs);
         repToSeqThread.start();
-
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
             try {
-                executeTimelyThread();
+//                executeTimelyThread(); // acknowledge replica
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -27,14 +36,11 @@ public class Sequencer {
         try {
             DatagramSocket socket = new DatagramSocket(8033);
             System.out.println("Sequencer listening to FE requests on: " + (8033));
-
             byte[] buffer = new byte[1000];
-
             while (true) {
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
-
-                SequencerThread sequencerThread = new SequencerThread(request);
+                SequencerThread sequencerThread = new SequencerThread(request, logs);
                 sequencerThread.start();
             }
         } catch (Exception e) {
@@ -48,17 +54,11 @@ public class Sequencer {
         // this thread runs every 30 seconds
         for (Map.Entry<Integer, PacketData> compEntry : data.getCompRequestTrack().entrySet()) {
             PacketData packetData = compEntry.getValue();
-
             byte[] contentMessage = serialize(packetData.content);
-
             for (ServerDetails details : packetData.servers) {
                 try {
-
                     DatagramSocket socket = new DatagramSocket();
-
-                    DatagramPacket packet = new DatagramPacket(contentMessage, contentMessage.length,
-                            InetAddress.getByName(details.ip), details.port);
-
+                    DatagramPacket packet = new DatagramPacket(contentMessage, contentMessage.length, InetAddress.getByName(details.ip), details.port);
                     socket.send(packet);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -68,17 +68,11 @@ public class Sequencer {
 
         for (Map.Entry<Integer, PacketData> soenEntry : data.getSoenRequestTrack().entrySet()) {
             PacketData packetData = soenEntry.getValue();
-
             byte[] contentMessage = serialize(packetData.content);
-
             for (ServerDetails details : packetData.servers) {
                 try {
-
                     DatagramSocket socket = new DatagramSocket();
-
-                    DatagramPacket packet = new DatagramPacket(contentMessage, contentMessage.length,
-                            InetAddress.getByName(details.ip), details.port);
-
+                    DatagramPacket packet = new DatagramPacket(contentMessage, contentMessage.length, InetAddress.getByName(details.ip), details.port);
                     socket.send(packet);
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -89,21 +83,16 @@ public class Sequencer {
         for (Map.Entry<Integer, PacketData> inseEntry : data.getInseRequestTrack().entrySet()) {
             PacketData packetData = inseEntry.getValue();
             byte[] contentMessage = serialize(packetData.content);
-
             for (ServerDetails details : packetData.servers) {
                 try {
                     DatagramSocket socket = new DatagramSocket();
-
-                    DatagramPacket packet = new DatagramPacket(contentMessage, contentMessage.length,
-                            InetAddress.getByName(details.ip), details.port);
-
+                    DatagramPacket packet = new DatagramPacket(contentMessage, contentMessage.length, InetAddress.getByName(details.ip), details.port);
                     socket.send(packet);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
-
         data.clearHashMaps();
     }
 

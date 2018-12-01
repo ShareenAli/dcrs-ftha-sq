@@ -1,9 +1,14 @@
 import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.util.logging.Logger;
 
 public class RepToSeqThread implements Runnable {
-    public RepToSeqThread() { }
+    private Logger logs;
+
+    public RepToSeqThread(Logger logs) {
+        this.logs = logs;
+    }
 
     public void start() {
         Thread thread = new Thread(this, "Replica To Sequencer");
