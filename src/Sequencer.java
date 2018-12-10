@@ -2,6 +2,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -20,10 +21,15 @@ public class Sequencer {
             ioe.printStackTrace();
         }
 
+        // get the reference of the singleton data class to initialize the possible servers in the network.
         SequenceData sequenceData = SequenceData.getInstance();
         sequenceData.initializeServers();
+        
+        // start the thread to listen to the replica ack.
         RepToSeqThread repToSeqThread = new RepToSeqThread(logs);
         repToSeqThread.start();
+        
+        // check and clean the queue every thirty seconds. 
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
         executorService.scheduleAtFixedRate(() -> {
             try {
@@ -34,12 +40,15 @@ public class Sequencer {
         }, 30, 30, TimeUnit.SECONDS);
 
         try {
-            DatagramSocket socket = new DatagramSocket(8033);
+        	// open the multi cast socket to listen to Front End
+        	MulticastSocket socket = new MulticastSocket(8033);
+        	socket.joinGroup(InetAddress.getByName("230.1.1.5"));
             System.out.println("Sequencer listening to FE requests on: " + (8033));
-            byte[] buffer = new byte[1000];
             while (true) {
+                byte[] buffer = new byte[1000];
                 DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                 socket.receive(request);
+                // new thread per request. because jungle ka ek hi sher hota hai.
                 SequencerThread sequencerThread = new SequencerThread(request, logs);
                 sequencerThread.start();
             }

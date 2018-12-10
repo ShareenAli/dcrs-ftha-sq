@@ -5,10 +5,15 @@ import java.util.List;
 public class SequenceData {
     public static SequenceData instance;
 
+    // list of server with their network details
     private HashMap<String, List<ServerDetails>> servers = new HashMap<>();
+    
+    // list of the sequence queue
     private HashMap<Integer, PacketData> compRequestTrack = new HashMap<>();
     private HashMap<Integer, PacketData> soenRequestTrack = new HashMap<>();
     private HashMap<Integer, PacketData> inseRequestTrack = new HashMap<>();
+    
+    // the last sequence number used. increment it before assigning it
     private int compSequenceNumber = 0;
     private int soenSequenceNumber = 0;
     private int inseSequenceNumber = 0;

@@ -19,19 +19,24 @@ public class RepToSeqThread implements Runnable {
     public void run() {
         try {
             DatagramSocket socket = new DatagramSocket(8044);
+            
+            System.out.println("Sequencer listening to replica requests on: " + (8044));
 
             while (true) {
+            	// receive incoming ack.
                 byte[] incoming = new byte[1000];
 
                 DatagramPacket packet = new DatagramPacket(incoming, incoming.length);
                 socket.receive(packet);
 
+                // parse the content. it will be sequence-serverName format.
                 String content = (String) deserialize(packet.getData());
                 String contents[] = content.split("-");
 
                 int sequence = Integer.parseInt(contents[0]);
                 String server = contents[1];
 
+                // remove from the queue accordingly.
                 SequenceData data = SequenceData.getInstance();
                 data.removeFromQueue(sequence, packet.getAddress().getHostAddress(), server);
             }
